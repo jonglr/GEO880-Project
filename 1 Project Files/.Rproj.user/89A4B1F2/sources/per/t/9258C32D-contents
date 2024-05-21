@@ -52,7 +52,7 @@ Next, Exploratory Data Analysis (EDA) will be used to visualize and understand t
 For model development, the additional parameters calculated through the feature engineering will be used to statically classify the GPS tracks into different transportation modes.
 
 #### Model Evaluation
-Model evaluation will involve assessing performance metrics such as accuracy, precision, recall, and F1-score. A confusion matrix will be used to analyze misclassifications, providing insights into the model's strengths and weaknesses.
+Model evaluation will involve assessing performance metrics such as accuracy, precision, recall, and F1-score using the pre-known mode of transportation through the name of the tracks (validation). A confusion matrix will be used to analyze misclassifications, providing insights into the model's strengths and weaknesses.
 
 #### Conceptual Movement Spaces and Trajectory Modelling
 The conceptual framework for this study will consider different movement spaces, such as urban vs. rural environments, and respective modelling approaches for trajectories. This includes understanding how different paths (streets, hiking paths) and spatial contexts influence transportation modes. Trajectory modelling will involve tracking and analyzing the paths taken by individuals to identify distinct patterns associated with each mode of transportation.
