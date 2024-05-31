@@ -1,0 +1,131 @@
+---
+title: "Data Processing"
+author: "Jon Guler, Michael Fehr"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+#Initialization
+##Load and check Packages
+```{r package management, echo=FALSE}
+
+check_pkg <- function(x) {
+  #' Checks whether a package is installed and installs or loads the package
+  if (!require(x, character.only = TRUE, quietly = TRUE))
+  {
+    install.packages(x, dep = TRUE)
+    if (!require(x, character.only = TRUE, quietly = TRUE))
+      stop("Package not found")
+  }
+}
+
+check_pkg("readr")
+check_pkg("dplyr")
+check_pkg("sf")
+check_pkg("sp")
+check_pkg("ggplot2")
+check_pkg("lubridate")
+check_pkg("SimilarityMeasures")
+check_pkg("plotly")
+check_pkg("geosphere")
+check_pkg("leaflet")
+
+Data <- here::here()   # Data folder
+```
+
+##Load Data
+```{r data management, echo=FALSE}
+#import of the GPX tracks
+
+#import of the road network data
+
+```
+
+##Explore Data
+```{r EDA, echo=FALSE}
+#Visualize and understand the GPX and road network data
+
+#histograms, box plots, and scatter plots -> similarities between transportation modes
+
+```
+
+#Function Definitions
+##Speed
+```{r Speed Function, echo=FALSE}
+#max speed
+
+#average speed
+
+#speed variance
+```
+
+##Elevation Change
+```{r Elevation Function, echo=FALSE}
+
+```
+
+##Similarity Measures
+###Edit Distance
+```{r Edit Distance, echo=FALSE}
+
+```
+
+###Fréchet Distance
+```{r Fréchet Distance, echo=FALSE}
+
+```
+
+##Stop Frequency
+```{r Stop Frequency Function, echo=FALSE}
+
+```
+
+##Path Length
+```{r Path Length, echo=FALSE}
+
+```
+
+#Classification Model
+```{r Classification Model, echo=FALSE}
+#model differentiates between jogging, skitouring, hiking, biking
+
+```
+
+#Data Processing
+```{r Data Processing, echo=FALSE}
+
+```
+
+#Evaluation
+##Accuracy
+```{r Accuracy, echo=FALSE}
+
+```
+
+##Precision
+```{r Precision, echo=FALSE}
+
+```
+
+##Recall
+```{r Recall, echo=FALSE}
+
+```
+
+##F1-Score
+```{r F1-Score, echo=FALSE}
+
+```
+
+#Result Visualization
+##Classification Visualization
+```{r Classification Visualization, echo=FALSE}
+#map plots, feature importance graphs
+
+```
+
+##Accuracy Visualization
+```{r Accuracy Visualization, echo=FALSE}
+#confusion matrices
+
+```
