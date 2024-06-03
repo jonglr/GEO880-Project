@@ -1,3 +1,11 @@
 
 *.gpx
 .Rproj.user
+Data/Strassennetz.shx
+Data/Strassennetz.shp
+Data/Strassennetz.qmd
+Data/Strassennetz.prj
+Data/Strassennetz.dbf
+Data/Strassennetz.cpg
+Data/R6_1_ShamounBaranesEtal_PLoSone12.pdf
+Data/PatTrEnvData_FS23_T7_MultiSourceData.pdf
