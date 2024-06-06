@@ -31,6 +31,9 @@ check_pkg("SimilarityMeasures")
 check_pkg("plotly")
 check_pkg("geosphere")
 check_pkg("leaflet")
+check_pkg("ggspatial")
+check_pkg("rnaturalearth")
+check_pkg("rnaturalearthdata")
 
 Data <- here::here()   # Data folder
 ```
@@ -94,10 +97,30 @@ streets_intersecting <- st_intersection(streets, gpx_buffer)
 
 # Plot the results
 ggplot() +
-  geom_sf(data = gpx_buffer, fill = NA, color = 'blue', size = 1) +
-  geom_sf(data = streets_intersecting, color = 'red') +
+  geom_sf(data = streets_intersecting, color = 'grey') +
+  geom_sf(data = gpx_buffer, fill = NA, color = 'red', size = 1) +
   theme_minimal() +
   labs(title = "Streets and GPX Buffer", x = "Longitude", y = "Latitude")
+
+# Plot the results in a Swiss Map
+# Get Switzerland basemap
+switzerland <- ne_countries(country = "Switzerland", returnclass = "sf")
+
+# Transform basemap to LV95
+switzerland <- st_transform(switzerland, 2056)
+
+ggplot() +
+  geom_sf(data = switzerland, fill = "white", color = "black") +
+  geom_sf(data = streets_intersecting, color = 'grey') +
+  geom_sf(data = gpx_buffer, fill = NA, color = 'red', size = 1) +
+  coord_sf(crs = st_crs(2056)) +
+  theme_minimal() +
+  labs(title = "Streets and GPX Buffer", x = "Longitude", y = "Latitude") +
+  annotation_scale(location = "bl", width_hint = 0.5) +
+  theme(legend.position = "right") +
+  annotation_north_arrow(location = "bl", which_north = "true", 
+                         pad_x = unit(0.75, "in"), pad_y = unit(0.75, "in"),
+                         style = north_arrow_fancy_orienteering)
 
 #histograms, box plots, and scatter plots -> similarities between transportation modes
 
