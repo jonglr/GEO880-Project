@@ -34,6 +34,7 @@ check_pkg("leaflet")
 check_pkg("ggspatial")
 check_pkg("rnaturalearth")
 check_pkg("rnaturalearthdata")
+check_pkg("tidyverse")
 
 Data <- here::here()   # Data folder
 ```
@@ -69,6 +70,16 @@ gpx_all$type[10] <- "skitour"
 
 # Inspect the combined data
 print(gpx_all)
+```
+
+#Data Preparation
+```{r data preparation, echo=FALSE}
+#Outlier removal
+
+#Interpolation to 10s sampling interval
+
+#filter out static movement
+
 ```
 
 ```{r import road network, echo=FALSE}
@@ -126,6 +137,8 @@ ggplot() +
 
 ```
 
+#Segmentation
+
 #Function Definitions
 ##Speed
 ```{r Speed Function, echo=FALSE}
@@ -168,13 +181,7 @@ print(gpx_all)
 
 ```
 
-##Similarity Measures
-###Edit Distance
-```{r Edit Distance, echo=FALSE}
-
-```
-
-###Fréchet Distance
+##Distance to Street
 ```{r Fréchet Distance, echo=FALSE}
 
 ```
@@ -184,8 +191,8 @@ print(gpx_all)
 
 ```
 
-##Path Length
-```{r Path Length, echo=FALSE}
+##Add Month
+```{r Add Month, echo=FALSE}
 
 ```
 
@@ -224,7 +231,7 @@ print(gpx_all)
 #Result Visualization
 ##Classification Visualization
 ```{r Classification Visualization, echo=FALSE}
-#map plots, feature importance graphs
+#color = classification, size = uncertainty (percentage)
 
 ```
 
