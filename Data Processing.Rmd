@@ -35,51 +35,96 @@ check_pkg("ggspatial")
 check_pkg("rnaturalearth")
 check_pkg("rnaturalearthdata")
 check_pkg("tidyverse")
+check_pkg("XML")
+check_pkg("here")
+check_pkg("gridExtra")
+check_pkg("rlang")
+check_pkg("htmlwidgets")
 
 Data <- here::here()   # Data folder
 ```
 
 ##Load Data
 ```{r import GPX tracks, echo=FALSE}
-# Specify the path to the folder containing GPX files
-data_folder <- "Data"
+# Set options
+options(digits.secs = 3)
+options(scipen = 999)
 
-# List all GPX files in the folder
-gpx_files <- list.files(data_folder, pattern = "\\.gpx$", full.names = TRUE)
-
-# Initialize an empty list to store the GPX data
-gpx_list <- list()
-
-# Loop through each GPX file and read the data
-for (file in gpx_files) {
-  # Read the GPX file
-  gpx_sf <- st_read(file, layer = "tracks", quiet = TRUE)
+# Function to parse a single GPX file and return an sf object
+parse_gpx_to_sf <- function(gpx_file, target_crs = 2056) {
+  # Parse GPX file
+  parsed <- htmlTreeParse(file = gpx_file, useInternalNodes = TRUE)
   
-   # Transform the coordinate system to LV95 (EPSG:2056)
-  gpx_sf_transformed <- st_transform(gpx_sf, crs = 2056)
+  # Get values via the respective xpath
+  coords <- xpathSApply(parsed, path = "//trkpt", xmlAttrs)
+  elev   <- xpathSApply(parsed, path = "//trkpt/ele", xmlValue)
+  ts_chr <- xpathSApply(parsed, path = "//trkpt/time", xmlValue)
   
-  # Append to the list
-  gpx_list <- append(gpx_list, list(gpx_sf_transformed))
+  # Combine into a dataframe
+  dat_df <- data.frame(
+    ts_POSIXct = ymd_hms(ts_chr, tz = "CET"),
+    lat = as.numeric(coords["lat",]), 
+    lon = as.numeric(coords["lon",]), 
+    elev = as.numeric(elev)
+  )
+  
+  # Extract movement type from trk
+  movement_type <- xpathSApply(parsed, path = "//trk/type", xmlValue)
+  dat_df$movement_type <- ifelse(length(movement_type) > 0, movement_type, NA)
+  
+  # Convert dataframe to sf object with WGS84 CRS (EPSG:4326)
+  dat_sf <- st_as_sf(dat_df, coords = c("lon", "lat"), crs = 4326, agr = "constant")
+  
+  # Transform to the target CRS (LV95, EPSG:2056)
+  dat_sf_transformed <- st_transform(dat_sf, crs = target_crs)
+  
+  return(dat_sf_transformed)
 }
 
-# Combine all the GPX data into a single sf object
-gpx_all <- do.call(rbind, gpx_list)
+# Directory containing GPX files
+gpx_dir <- here("Data")
 
-# Modify the "type" attribute from "night hike" to "skitour"
-gpx_all$type[10] <- "skitour"
+# List all GPX files in the directory
+gpx_files <- list.files(gpx_dir, pattern = "\\.gpx$", full.names = TRUE)
 
-# Inspect the combined data
-print(gpx_all)
+# Apply the function to all GPX files and store the results in a list
+sf_obj_list <- lapply(gpx_files, parse_gpx_to_sf)
+
+# Combine the list of sf objects into a single sf object
+sf_obj <- do.call(rbind, sf_obj_list)
 ```
 
 #Data Preparation
 ```{r data preparation, echo=FALSE}
 #Outlier removal
+remove_outliers <- function(sf_obj) {
+  # Extract coordinates
+  coords <- st_coordinates(sf_obj)
+  
+  # Calculate the interquartile range (IQR) for latitude and longitude
+  iqr_lat <- IQR(coords[, "Y"])
+  iqr_lon <- IQR(coords[, "X"])
+  
+  # Define the bounds for outliers
+  lower_bound_lat <- quantile(coords[, "Y"], 0.25) - 1.5 * iqr_lat
+  upper_bound_lat <- quantile(coords[, "Y"], 0.75) + 1.5 * iqr_lat
+  lower_bound_lon <- quantile(coords[, "X"], 0.25) - 1.5 * iqr_lon
+  upper_bound_lon <- quantile(coords[, "X"], 0.75) + 1.5 * iqr_lon
+  
+  # Filter out outliers
+  sf_obj <- sf_obj %>%
+    filter(
+      coords[, "Y"] >= lower_bound_lat & 
+      coords[, "Y"] <= upper_bound_lat & 
+      coords[, "X"] >= lower_bound_lon & 
+      coords[, "X"] <= upper_bound_lon
+    )
+  
+  return(sf_obj)
+}
 
-#Interpolation to 10s sampling interval
-
-#filter out static movement
-
+#Clean the data and remove the outliers
+sf_obj_clean <- lapply(sf_obj_list, remove_outliers)
 ```
 
 ```{r import road network, echo=FALSE}
@@ -87,156 +132,316 @@ print(gpx_all)
 
 # Read the shapefile
 streets <- st_read("Data/Strassennetz.shp")
-
 # Inspect the data
 print(streets)
 ```
 
 ```{r Reduce street Data Extend, echo=FALSE}
-#cut the street data extend to the buffer around GPX data
+# Combine all GPX tracks into a single sf object
+combined_tracks <- do.call(rbind, sf_obj_clean)
 
-# Create a 1000-meter buffer around the GPX tracks
-gpx_buffer <- st_buffer(gpx_all, dist = 1000)
+# Create a buffer of 1 km (1000 meters) around the combined tracks
+buffered_tracks <- st_buffer(combined_tracks, dist = 1000)
 
-# Find street segments that intersect or touch the GPX buffer
-streets_intersecting <- st_intersection(streets, gpx_buffer)
+# Combine all buffers into a single geometry
+combined_buffer <- st_union(buffered_tracks)
+
+# Filter the street network to keep only the streets within the buffer
+filtered_streets <- streets[st_intersects(streets, combined_buffer, sparse = FALSE), ]
+
+# Plot the results to visualize and save the plot as a PNG file
+png("plot.png")
+plot(st_geometry(streets), col = "gray", main = "Filtered Streets and GPX Tracks")
+plot(st_geometry(filtered_streets), col = "blue", add = TRUE)
+plot(st_geometry(combined_tracks), col = "red", add = TRUE)
+dev.off()
+
+# Save the filtered streets
+st_write(filtered_streets, "filtered_streets.gpkg")
 ```
-
-##Explore Data
-```{r EDA, echo=FALSE}
-#Visualize and understand the GPX and road network data
-
-# Plot the results
-ggplot() +
-  geom_sf(data = streets_intersecting, color = 'grey') +
-  geom_sf(data = gpx_buffer, fill = NA, color = 'red', size = 1) +
-  theme_minimal() +
-  labs(title = "Streets and GPX Buffer", x = "Longitude", y = "Latitude")
-
-# Plot the results in a Swiss Map
-# Get Switzerland basemap
-switzerland <- ne_countries(country = "Switzerland", returnclass = "sf")
-
-# Transform basemap to LV95
-switzerland <- st_transform(switzerland, 2056)
-
-ggplot() +
-  geom_sf(data = switzerland, fill = "white", color = "black") +
-  geom_sf(data = streets_intersecting, color = 'grey') +
-  geom_sf(data = gpx_buffer, fill = NA, color = 'red', size = 1) +
-  coord_sf(crs = st_crs(2056)) +
-  theme_minimal() +
-  labs(title = "Streets and GPX Buffer", x = "Longitude", y = "Latitude") +
-  annotation_scale(location = "bl", width_hint = 0.5) +
-  theme(legend.position = "right") +
-  annotation_north_arrow(location = "bl", which_north = "true", 
-                         pad_x = unit(0.75, "in"), pad_y = unit(0.75, "in"),
-                         style = north_arrow_fancy_orienteering)
-
-#histograms, box plots, and scatter plots -> similarities between transportation modes
-
-```
-
-#Segmentation
 
 #Function Definitions
 ##Speed
 ```{r Speed Function, echo=FALSE}
-# Ensure the data is sorted by time
-gpx_all <- gpx_all %>% arrange(time)
+# Function to calculate speed
+calculate_speed <- function(track) {
+  
+  # Ensure the track is sorted by time
+  track <- track %>% arrange(ts_POSIXct)
+  
+  # Calculate the distance between consecutive points
+  track <- track %>%
+    mutate(
+      distance = st_distance(geometry, lead(geometry), by_element = TRUE),
+      time_diff = as.numeric(difftime(lead(ts_POSIXct), ts_POSIXct, units = "secs")),
+      speed = (distance / time_diff) * 3.6  # Convert speed to km/h
+    )
+  
+  # Handle the last row's NA values
+  track <- track %>%
+    mutate(
+      distance = ifelse(is.na(distance), 0, distance),
+      time_diff = ifelse(is.na(time_diff), 0, time_diff),
+      speed = ifelse(is.na(speed), 0, speed)
+    )
+  
+  return(track)
+}
 
-# Extract coordinates and time
-coords <- st_coordinates(gpx_all)
-time <- gpx_all$time
-
-# Calculate distances between consecutive points
-distances <- sqrt(diff(coords[,1])^2 + diff(coords[,2])^2)
-
-# Calculate time differences between consecutive points in seconds
-time_diffs <- as.numeric(difftime(time[-1], time[-length(time)], units = "secs"))
-
-# Calculate speeds (m/s)
-speeds <- distances / time_diffs
-
-# Compute summary statistics
-max_speed <- max(speeds, na.rm = TRUE)
-avg_speed <- mean(speeds, na.rm = TRUE)
-speed_variance <- var(speeds, na.rm = TRUE)
-
-# Add the speed statistics as attributes to the sf object
-gpx_all$max_speed <- max_speed
-gpx_all$avg_speed <- avg_speed
-gpx_all$speed_variance <- speed_variance
-
-# Inspect the resulting sf object
-print(gpx_all)
-
-
-
-# -> we also need to import the time as an attribute
+sf_obj_speed <- lapply(sf_obj_clean, calculate_speed)
 ```
 
 ##Elevation Change
 ```{r Elevation Function, echo=FALSE}
+# Function to calculate elevation change
+calculate_elevation_change <- function(track) {
+  track <- track %>%
+    mutate(
+      elev_change = elev - lag(elev, default = first(elev))
+    )
+  return(track)
+}
 
+# Apply the function to each element in sf_obj_speed
+sf_obj_elev <- lapply(sf_obj_speed, calculate_elevation_change)
 ```
 
-##Distance to Street
-```{r Fréchet Distance, echo=FALSE}
+##Distance to Street and Hiking Paths
+```{r Distance to Street, echo=FALSE}
+# Define the subsets based on OBJEKTART (Streets) and WANDERWEGE
+subset1 <- filtered_streets %>%
+  filter(OBJEKTART %in% c("10m Strasse", "8m Strasse", "6m Strasse", "4m Strasse", "3m Strasse", "2m Weg", "1m Weg"))
 
-```
+subset2 <- filtered_streets %>%
+  filter(WANDERWEGE %in% c("Wanderwege", "Bergwanderweg"))
 
-##Stop Frequency
-```{r Stop Frequency Function, echo=FALSE}
+# Ensure subset1 excludes streets in subset2
+subset1 <- subset1 %>%
+  filter(!(OBJEKTART %in% c("Wanderwege", "Bergwanderweg")))
 
+# Function to calculate the nearest distance to a street subset
+calculate_nearest_distance <- function(track, street_subset, subset_name) {
+  nearest_indices <- st_nearest_feature(track$geometry, street_subset)
+  nearest_points <- st_geometry(street_subset)[nearest_indices]
+  distances <- st_distance(track$geometry, nearest_points, by_element = TRUE)
+  track <- track %>%
+    mutate(!!paste0("distance_", subset_name) := as.numeric(distances))
+  return(track)
+}
+
+# Apply the function to each element in sf_obj_elev for both subsets
+sf_obj_dist <- lapply(sf_obj_elev, calculate_nearest_distance, street_subset = subset1, subset_name = "street")
+sf_obj_dist <- lapply(sf_obj_dist, calculate_nearest_distance, street_subset = subset2, subset_name = "wander")
 ```
 
 ##Add Month
 ```{r Add Month, echo=FALSE}
+# Function to extract the month and add it as a new column
+add_month_column <- function(track) {
+  track <- track %>%
+    mutate(month = as.numeric(format(ts_POSIXct, "%m")))
+  return(track)
+}
 
+# Apply the function to each element in sf_obj_elev
+sf_obj_month <- lapply(sf_obj_dist, add_month_column)
+```
+
+##Explore Data
+```{r EDA, echo=FALSE}
+# Combine all data frames into one and ensure a 'track_id' column exists
+combined_data <- bind_rows(lapply(sf_obj_month, function(df) {
+  df$track_id <- 1:nrow(df) # create a track_id column for each dataframe
+  return(df)
+}))
+
+# Plotting function for each attribute
+plot_attribute <- function(data, attribute, title) {
+  ggplot(data, aes(x = track_id, y = !!sym(attribute), color = as.factor(month))) +
+    geom_point(alpha = 0.7) +
+    labs(title = title, x = "Track ID", y = attribute, color = "Month") +
+    theme_minimal()
+}
+
+# Create plots for each attribute
+plot_speed <- plot_attribute(combined_data, "speed", "Speed (km/h)")
+plot_elev_change <- plot_attribute(combined_data, "elev_change", "Elevation Change (m)")
+plot_distance_street <- plot_attribute(combined_data, "distance_street", "Distance to Street (m)")
+plot_distance_wander <- plot_attribute(combined_data, "distance_wander", "Distance to Wanderweg (m)")
+plot_month <- ggplot(combined_data, aes(x = track_id, y = month, color = as.factor(month))) +
+  geom_point(alpha = 0.7) +
+  labs(title = "Month", x = "Track ID", y = "Month", color = "Month") +
+  theme_minimal()
+
+# Arrange all plots in a grid
+png("grid_plot.png", width = 800, height = 800)
+grid.arrange(plot_speed, plot_elev_change, plot_distance_street, plot_distance_wander, plot_month, ncol = 2)
+dev.off()
 ```
 
 #Classification Model
 ```{r Classification Model, echo=FALSE}
-#model differentiates between jogging, skitouring, hiking, biking
+classify_gpx_tracks <- function(sf_obj_month) {
+  
+  classify_entry <- function(entry) {
+    
+    for (i in 1:nrow(entry)) {
+      points <- c(cycling = 0, running= 0, hiking = 0, skitouring = 0)
+      max_points <- c(cycling = 5, running = 4, hiking = 5, skitouring = 4)
+      
+      speed <- entry$speed[i]
+      elevation <- entry$elev_change[i]
+      street_distance <- entry$distance_street[i]
+      hiking_path_distance <- entry$distance_wander[i]
+      month <- entry$month[i]
+    
+      # Criteria
+      if (speed > 15) points["cycling"] <- points["cycling"] + 1
+      if (speed > 5 & speed <= 15) points["running"] <- points["running"] + 1
+      if (speed > 2 & speed <= 5) points["hiking"] <- points["hiking"] + 1
+    
+      if (abs(elevation) < 0.1) points["running"] <- points["running"] + 1
+      if (abs(elevation) > 0.1 & abs(elevation) <= 0.4) {
+        points["skitouring"] <- points["skitouring"] + 1
+        points["hiking"] <- points["hiking"] + 1
+      }
+      if (abs(elevation) > 0.4) points["cycling"] <- points["cycling"] + 1
+    
+      if (street_distance > 100) {
+        points["hiking"] <- points["hiking"] + 1
+        points["skitouring"] <- points["skitouring"] + 1
+      }
+      if (street_distance <= 100) {
+        points["running"] <- points["running"] + 1
+        points["cycling"] <- points["cycling"] + 1
+      }
+    
+      if (hiking_path_distance > 1000) {
+        points["running"] <- points["running"] + 1
+        points["cycling"] <- points["cycling"] + 1
+      }
+      if (hiking_path_distance <= 1000) {
+        points["hiking"] <- points["hiking"] + 1
+        points["skitouring"] <- points["skitouring"] + 1
+      }
+    
+      if (month %in% c(11:12, 1:5)) points["skitouring"] <- points["skitouring"] + 1
+      if (month %in% 6:10) {
+        points["hiking"] <- points["hiking"] + 1
+        points["cycling"] <- points["cycling"] + 1
+      }
+    
+      # Additional checks
+      if (month %in% 7:10) points["skitouring"] <- 0
+      if (speed > 8) points["hiking"] <- 0
+      if (street_distance > 40) points["cycling"] <- 0
+    
+      max_point_ratio <- points / max_points
+      class_type <- names(which.max(max_point_ratio))
+      
+      # Calculate certainty
+      certainty <- max(max_point_ratio)
+    
+      entry$class_type[i] <- class_type
+      entry$certainty[i] <- certainty
+      entry$points_cycling[i] <- points["cycling"]
+      entry$points_jogging[i] <- points["running"]
+      entry$points_hiking[i] <- points["hiking"]
+      entry$points_skitouring[i] <- points["skitouring"]
+    }
+    return(entry)
+  }
+  
+  classified_entries <- lapply(sf_obj_month, classify_entry)
+  return(classified_entries)
+}
 
-```
-
-#Data Processing
-```{r Data Processing, echo=FALSE}
-
+classified_tracks <- classify_gpx_tracks(sf_obj_month)
 ```
 
 #Evaluation
-##Accuracy
 ```{r Accuracy, echo=FALSE}
+# Function to calculate performance metrics
+calculate_metrics <- function(classified_tracks) {
+  
+  all_entries <- do.call(rbind, classified_tracks)
+  
+  # Calculate confusion matrix
+  confusion_matrix <- table(all_entries$class_type, all_entries$movement_type)
+  
+  # Calculate metrics for each class
+  metrics <- data.frame(
+    Class = character(),
+    Accuracy = numeric(),
+    Precision = numeric(),
+    Recall = numeric(),
+    F1_Score = numeric(),
+    stringsAsFactors = FALSE
+  )
+  
+  classes <- unique(all_entries$movement_type)
+  
+  for (class in classes) {
+    true_positive <- confusion_matrix[class, class]
+    false_positive <- sum(confusion_matrix[class, ]) - true_positive
+    false_negative <- sum(confusion_matrix[, class]) - true_positive
+    true_negative <- sum(confusion_matrix) - (true_positive + false_positive + false_negative)
+    
+    accuracy <- (true_positive + true_negative) / sum(confusion_matrix)
+    precision <- ifelse((true_positive + false_positive) == 0, 0, true_positive / (true_positive + false_positive))
+    recall <- ifelse((true_positive + false_negative) == 0, 0, true_positive / (true_positive + false_negative))
+    f1_score <- ifelse((precision + recall) == 0, 0, 2 * (precision * recall) / (precision + recall))
+    
+    metrics <- rbind(metrics, data.frame(
+      Class = class,
+      Accuracy = accuracy,
+      Precision = precision,
+      Recall = recall,
+      F1_Score = f1_score
+    ))
+  }
+  
+  return(metrics)
+}
 
-```
-
-##Precision
-```{r Precision, echo=FALSE}
-
-```
-
-##Recall
-```{r Recall, echo=FALSE}
-
-```
-
-##F1-Score
-```{r F1-Score, echo=FALSE}
-
+# Calculate and display metrics
+metrics <- calculate_metrics(classified_tracks)
+write.csv(metrics, "metrics.csv", row.names = FALSE)
 ```
 
 #Result Visualization
 ##Classification Visualization
 ```{r Classification Visualization, echo=FALSE}
-#color = classification, size = uncertainty (percentage)
+# Function to create an interactive map
+create_interactive_map <- function(classified_tracks) {
+  
+  # Combine all entries into a single sf object
+  all_tracks <- do.call(rbind, classified_tracks)
+  
+  # Transform coordinates from LV95 to WGS84
+  all_tracks <- st_transform(all_tracks, crs = 4326)
+  
+  # Create a color palette for class_type
+  class_palette <- colorFactor(topo.colors(length(unique(all_tracks$class_type))), domain = all_tracks$class_type)
+  
+  # Create the leaflet map
+  map <- leaflet(all_tracks) %>%
+    addProviderTiles(providers$CartoDB.Positron) %>%
+    addCircleMarkers(
+      radius = ~certainty * 10, # Scale the point size by certainty
+      color = ~class_palette(class_type), # Color by class_type
+      fillOpacity = 0.7,
+      stroke = FALSE,
+      label = ~paste("Class:", class_type, "<br>", "Certainty:", round(certainty, 2))
+    ) %>%
+    addLegend("bottomright", pal = class_palette, values = ~class_type, title = "Class Type",
+              opacity = 0.7)
+  
+  return(map)
+}
 
-```
+interactive_map <- create_interactive_map(classified_tracks)
 
-##Accuracy Visualization
-```{r Accuracy Visualization, echo=FALSE}
-#confusion matrices
-
+# Save the map as an HTML file
+saveWidget(interactive_map, "interactive_map.html", selfcontained = TRUE)
 ```

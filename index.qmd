@@ -38,7 +38,6 @@ bibliography: bibliography.bib
 <!-- after installing the wordcountadding, remove the line "#| eval: false" -->
 
 ```{r}
-#| eval: false
 wordcountaddin::word_count("index.qmd")
 ```
 
