@@ -157,7 +157,7 @@ plot(st_geometry(combined_tracks), col = "red", add = TRUE)
 dev.off()
 
 # Save the filtered streets
-st_write(filtered_streets, "filtered_streets.gpkg")
+#st_write(filtered_streets, "filtered_streets.gpkg")
 ```
 
 #Function Definitions
@@ -444,4 +444,66 @@ interactive_map <- create_interactive_map(classified_tracks)
 
 # Save the map as an HTML file
 saveWidget(interactive_map, "interactive_map.html", selfcontained = TRUE)
+```
+
+```{r Static Visualization, echo=FALSE}
+# Function to create a static map
+create_static_map <- function(classified_tracks) {
+  
+  # Combine all entries into a single sf object
+  all_tracks <- do.call(rbind, classified_tracks)
+  
+  # Transform coordinates from LV95 to WGS84
+  all_tracks <- st_transform(all_tracks, crs = 4326)
+  
+  # Create a color palette for class_type
+  class_palette <- topo.colors(length(unique(all_tracks$class_type)))
+  names(class_palette) <- unique(all_tracks$class_type)
+  
+  # Create the ggplot map
+  map <- ggplot(data = all_tracks) +
+    geom_sf(aes(color = class_type, size = certainty), alpha = 0.7) +
+    scale_color_manual(values = class_palette) +
+    scale_size_continuous(range = c(1, 10)) +
+    theme_minimal() +
+    labs(color = "Class Type", size = "Certainty", title = "Classified Tracks")
+  
+  return(map)
+}
+
+# Create and print the static map
+static_map <- create_static_map(classified_tracks)
+print(static_map)
+ggsave(filename = "track_overall.png", plot = static_map, width = 8, height = 6, dpi = 300)
+
+# Function to create and save static maps for each track
+save_static_maps <- function(classified_tracks) {
+  
+  # Create a color palette for class_type
+  unique_classes <- unique(unlist(lapply(classified_tracks, function(x) unique(x$class_type))))
+  class_palette <- topo.colors(length(unique_classes))
+  names(class_palette) <- unique_classes
+  
+  # Loop over each track and create a static map
+  for (i in seq_along(classified_tracks)) {
+    track <- classified_tracks[[i]]
+    
+    # Transform coordinates from LV95 to WGS84
+    track <- st_transform(track, crs = 4326)
+    
+    # Create the ggplot map
+    map <- ggplot(data = track) +
+      geom_sf(aes(color = class_type, size = certainty), alpha = 0.7) +
+      scale_color_manual(values = class_palette) +
+      scale_size_continuous(range = c(1, 10)) +
+      theme_minimal() +
+      labs(color = "Class Type", size = "Certainty", title = paste("Track", i))
+    
+    # Save the plot as a PNG file
+    ggsave(filename = paste0("track_", i, ".png"), plot = map, width = 8, height = 6, dpi = 300)
+  }
+}
+
+# Example call to the function
+save_static_maps(classified_tracks)
 ```
