@@ -380,8 +380,11 @@ write.csv(metrics, "metrics.csv", row.names = FALSE)
 # Function to create an interactive map
 create_interactive_map <- function(classified_tracks) {
   
-  # Combine all entries into a single sf object
-  all_tracks <- do.call(rbind, classified_tracks)
+  # Subset the first three tracks
+  subset_tracks <- classified_tracks[1]
+  
+  # Combine the first three entries into a single sf object
+  all_tracks <- do.call(rbind, subset_tracks)
   
   # Transform coordinates from LV95 to WGS84
   all_tracks <- st_transform(all_tracks, crs = 4326)
@@ -405,6 +408,7 @@ create_interactive_map <- function(classified_tracks) {
   return(map)
 }
 
+# Assuming classified_tracks is already defined
 interactive_map <- create_interactive_map(classified_tracks)
 
 # Save the map as an HTML file
