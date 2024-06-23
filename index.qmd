@@ -1,6 +1,6 @@
 ---
 title: Automated classification of movement types based on GPS-dervived features
-subtitle: leveraging GPS data to classify different types of active movements: hiking, jogging, ski touring and cycling.
+subtitle: leveraging GPS data to classify different types of active movements hiking, jogging, ski touring and cycling.
 author: Johannes Guler and Michael Fehr
 format:
   html:
