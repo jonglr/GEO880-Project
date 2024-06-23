@@ -40,9 +40,13 @@ This project aims to identify different types of active movement based on person
 
 <!-- after installing the wordcountadding, remove the line "#| eval: false" -->
 
-```{r}
+```{r wordcount}
+# install.packages("pacman") 
+library("pacman")
+
+p_install_gh("benmarwick/wordcountaddin")
+
 wordcountaddin::word_count("index.qmd")
 ```
 
-@laube2011 investigate how temporal scale affects the calculation of movement parameters (speed, sinuosity and turning angle) of animal trajectories. 
-@chatgpt2023
+
