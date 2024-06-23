@@ -173,9 +173,9 @@ div.csl-indent {
 <h4 class="anchored" data-anchor-id="data-loading">Data Loading</h4>
 <p>The first step involves loading the GPX files from Strava and transforming them to a common coordinate system using Swiss TLM3D data. This ensures consistency in the spatial representation of the data.</p>
 </section>
-<section id="cleaning-and-interpolation" class="level4">
-<h4 class="anchored" data-anchor-id="cleaning-and-interpolation">Cleaning and Interpolation</h4>
-<p>Data cleaning involves removing outliers that could skew the analysis. For instance, sudden jumps in GPS coordinates that are not physically plausible are filtered out. Additionally, the GPS tracks are interpolated to a consistent time interval, adjusting Strava tracks to 3-second intervals, to standardize the data points for analysis. Additionally, the street data has been reduced to avoid a huge data load. This involved the combination of all GPX tracks into a single sf object. After that, we have used a buffer of 1 km (1000 meters) around the combined tracks and later combined all buffers into a single geometry.After that the street network has been filtered to keep only the streets within the buffer.</p>
+<section id="data-cleaning" class="level4">
+<h4 class="anchored" data-anchor-id="data-cleaning">Data Cleaning</h4>
+<p>Data cleaning involves removing outliers that could skew the analysis. For instance, sudden jumps in GPS coordinates that are not physically plausible are filtered out. Additionally, the street data has been reduced to avoid a huge data load. This involved the combination of all GPX tracks into a single sf object. After that, we have used a buffer of 1 km (1000 meters) around the combined tracks and later combined all buffers into a single geometry.After that the street network has been filtered to keep only the streets within the buffer.</p>
 </section>
 </section>
 <section id="feature-engineering" class="level3">
@@ -185,8 +185,6 @@ div.csl-indent {
 <li>Speed (cross scale): Calculating speed over different scales:
 <ul>
 <li>Average Speed: Mean speed over the duration of the activity for all segments.</li>
-<li>Maximum Speed: The highest speed that was reached during the activity for all segments.</li>
-<li>Speed Variance: the mean variance of speed during the activity for all segments.</li>
 </ul></li>
 <li>Elevation Change: Total elevation gain and loss.</li>
 <li>Street &amp; hiking path Distance: total distance to street and hiking path network.</li>
@@ -214,7 +212,7 @@ div.csl-indent {
 <p>Initial data exploration includes generating plots and visualizations to understand the distribution and characteristics of the data. This step helps identify any anomalies and provides insights into the patterns associated with different activities. The exploratory data analysis (EDA) involves several steps to prepare and visualize the data for further insights. The first step in the EDA process involves combining all individual data frames into a single data frame. Each data frame corresponds to a track and is stored in a dedicated list with a new column with an indentifier attribute to identify each track. The functions were then plotted for each attribute before arranging and saving the plots as shown in the figure 1 below.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="%22GEO880-Project/grid_plot.png%22" class="img-fluid figure-img"></p>
+<p><img src="grid_plot.png" class="img-fluid figure-img"></p>
 <figcaption>Figure 1: A visualization of the arranged plots of each attribute</figcaption>
 </figure>
 </div>
@@ -255,7 +253,7 @@ div.csl-indent {
 <p>Additionally, we have defined 3 checks to invalidate movement types if the the threshold were not realistic. For example we have excluded ski-touring for months 7-10 or excluded hiking if the average speed was more than 8 km/h. Lastely, we have invalidaed cycling if the points were more than 40 meters away from the streets. Figure 2 shows the flow diagram of our classification model.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="%22GEO880-Project/Flow%20Diagram.png%22" class="img-fluid figure-img"></p>
+<p><img src="Flow%20Diagram.png" class="img-fluid figure-img"></p>
 <figcaption>Figure 2: Flow Diagram of Classification Model</figcaption>
 </figure>
 </div>
@@ -298,14 +296,14 @@ div.csl-indent {
 <p>Figure 3 is an interactive map of the classification.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="%22GEO880-Project/interactive_map.html%22" class="img-fluid figure-img"></p>
+<p><embed src="interactive_map.html" class="img-fluid"></p>
 <figcaption>Figure 3: Classified tracks</figcaption>
 </figure>
 </div>
 <p>Figure 4 is a static map that visualizes the classified GPS tracks.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="%22GEO880-Project/track_overall.png%22" class="img-fluid figure-img"></p>
+<p><img src="track_overall.png" class="img-fluid figure-img"></p>
 <figcaption>Figure 4: Classified tracks</figcaption>
 </figure>
 </div>
@@ -354,7 +352,7 @@ div.csl-indent {
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>wordcountaddin<span class="sc">::</span><span class="fu">word_count</span>(<span class="st">"index.qmd"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2430</code></pre>
+<pre><code>[1] 2378</code></pre>
 </div>
 </div>
 
