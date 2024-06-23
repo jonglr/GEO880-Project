@@ -1,14 +1,14 @@
 ---
-title: The title of your Semesterproject
-subtitle: A subtle subtitle
-author: Firstname1 Lastname1 and Firstname2 Lastname2
+title: Automated classification of movement types based on GPS-dervived features
+subtitle: leveraging GPS data to classify different types of active movements: hiking, jogging, ski touring and cycling.
+author: Johannes Guler and Michael Fehr
 format:
   html:
     code-fold: true
 execute:
   warning: false
   message: false
-lang: en  # switch to "de" if you write your report in german
+lang: en  
 bibliography: bibliography.bib
 ---
 
@@ -16,14 +16,17 @@ bibliography: bibliography.bib
 #| code-summary: preprocessing
 
 ``` 
-
+#test rendering MF
 
 ## Abstract
 
+This project aims to identify different types of active movement based on personal GPS data. By integrating additional data from Swiss TLM3D, which includes detailed information on street networks and hiking paths, we aim to accurately classify movement types based on GPS-derived features such as speed, elevation change, distance measures, and month of activity. The classification is performed using a decision tree model in R Studio. The effectiveness of this approach is evaluated using predictive validation metrics including accuracy, precision, recall, and F1-score. The validation is performed using personal GPS data such as hiking, jogging, ski-touring, and cycling that were collected via the Strava app over a period of 3 months. 
+
 ## Introduction
 
-@laube2011 investigate how temporal scale affects the calculation of movement parameters (speed, sinuosity and turning angle) of animal trajectories. 
-@chatgpt2023
+### Background
+
+
 
 ## Material and Methods
 
@@ -41,4 +44,5 @@ bibliography: bibliography.bib
 wordcountaddin::word_count("index.qmd")
 ```
 
-
+@laube2011 investigate how temporal scale affects the calculation of movement parameters (speed, sinuosity and turning angle) of animal trajectories. 
+@chatgpt2023
