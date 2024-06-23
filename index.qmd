@@ -1,6 +1,6 @@
 ---
-title: Automated classification of movement types based on GPS-dervived features
-subtitle: leveraging GPS data to classify different types of active movements with focus on hiking, jogging, ski touring and cycling.
+title: Classification of movement types based on GPS-dervived features
+subtitle: Leveraging GPS data to classify different types of active movements with focus on hiking, jogging, ski touring and cycling.
 author: Johannes Guler and Michael Fehr
 format:
   html:
@@ -68,12 +68,7 @@ Data cleaning involves removing outliers that could skew the analysis. For insta
 Additionally, the street data has been reduced to avoid a huge data load. This involved the combination of all GPX tracks into a single sf object. After that, we have used a buffer of 1 km (1000 meters) around the combined tracks
 and later combined all buffers into a single geometry.After that the street network has been filtered to keep only the streets within the buffer.
 
-#### Data Exploration
-Initial data exploration includes generating plots and visualizations to understand the distribution and characteristics of the data. This step helps identify any anomalies and provides insights into the patterns associated with different activities. In a later stage this might help us identifying thresholds. 
-
-![Initial Plot after data cleaning and interpolation, data processing.rmd line 154 - 157]("GEO880-Project/plot.png")
-
-#### Feature Engineering
+### Feature Engineering
 In a next step, key features were defined to characterize the movement types. These include:
 
 - Speed (cross scale): Calculating speed over different scales:
@@ -84,19 +79,74 @@ In a next step, key features were defined to characterize the movement types. Th
 - Street & hiking path Distance: total distance to street and hiking path network.
 - Temporal Measures: Seasonality of the activity.
 
-Additionally, the combination of average speed and elevation, speed variance and elevation, average speed and stop frequency, as well as speed variance and stop frequency are analysed.
+For each of these features, functions were defined for further usage. 
 
-Classification Model
-Model Selection
-A decision tree model is selected for its simplicity and interpretability. Decision trees can handle both numerical and categorical data, making them suitable for this classification task (Source from Patrick). 
+#### Speed Calculation
+A function named calculate_speed was defined to compute the speed of movement based on GPS data. This function sorts the GPS track data by time to ensure chronological order. It then calculates the distance between consecutive points using the st_distance function. The time difference between these points is also computed. Speed is derived by dividing the distance by the time difference and converting it to kilometers per hour (km/h). To handle the last row, which might have NA values due to the lack of a subsequent point, the function replaces these NA values with zeros. The function is applied to each element in the list sf_obj_clean, resulting in the list sf_obj_speed containing tracks with calculated speed values.
 
-Training and Validation
-The decision tree model is trained using a subset of the data and validated using cross-validation techniques. This ensures that the model generalizes well to unseen data.
+#### Elevation Change Calculation
+The calculate_elevation_change function calculates the change in elevation for each point in the track by subtracting the elevation of the previous point from the current point. This function is applied to each element in the sf_obj_speed list, resulting in the list sf_obj_elev that includes tracks with elevation change data.
+
+#### Distance to Street and Hiking Paths
+Two subsets of street data are defined based on different criteria: subset1 includes various types of streets, while subset2 includes hiking paths. A function calculate_nearest_distance calculates the nearest distance from each point in the track to the nearest point in a given street subset. This function is first applied using subset1 to compute the distance to streets, and then using subset2 to compute the distance to hiking paths. The results are stored in the list sf_obj_dist.
+
+#### Adding Month Information
+The add_month_column function extracts the month from the timestamp of each point and adds it as a new column to the track data. This function is applied to each element in the sf_obj_dist list, resulting in the list sf_obj_month that includes tracks with month information.
+
+#### Data Exploration
+Initial data exploration includes generating plots and visualizations to understand the distribution and characteristics of the data. This step helps identify any anomalies and provides insights into the patterns associated with different activities. The exploratory data analysis (EDA) involves several steps to prepare and visualize the data for further insights. The first step in the EDA process involves combining all individual data frames into a single data frame. Each data frame corresponds to a track and is stored in a dedicated list with a new column with an indentifier attribute to identify each track. The functions were then plotted for each attribute before arranging and saving the plots as shown in the figure 1 below.
+
+
+
+![Figure 1: A visualization of the arranged plots of each attribute]("GEO880-Project/grid_plot.png")
+
+
+
+### Classification Model
+A decision tree model was selected for its simplicity and interpretability, which are critical for understanding and communicating the results of our classification task. Decision trees offer several advantages that make them particularly suitable for this study, where we aim to classify types of active movement based on GPS data features (@shamoun-baranes2012). 
+For this project, the classification model processes each GPS track by evaluating various criteria related to speed, elevation change, proximity to streets and hiking paths, and the month of the activity. Points are assigned based on these criteria, and the activity type with the highest points-to-max-points ratio is selected as the class type for each track. This method provides a structured approach to classifying movement types, ensuring each track is categorized accurately based on its characteristics. We used the previously defined features as criteria evaluation: 
+
+- Speed: Points are assigned based on the speed range.
+  - Speed > 15 km/h adds points to cycling.
+  - Speed between 5 and 15 km/h adds points to running.
+  - Speed between 2 and 5 km/h adds points to hiking.
+- Elevation: Points are assigned based on the absolute elevation change.
+  - Elevation < 0.1 adds points to running.
+  - Elevation between 0.1 and 0.4 adds points to both ski-touring and hiking.
+  - Elevation > 0.4 adds points to cycling.
+- Street Distance: Points are assigned based on the distance to the nearest street.
+  - Distance > 100 meters adds points to hiking and ski-touring.
+  - Distance <= 100 meters adds points to running and cycling.
+- Hiking Path Distance: Points are assigned based on the distance to the nearest hiking path.
+  - Distance > 1000 meters adds points to running and cycling.
+  - Distance <= 1000 meters adds points to hiking and ski-touring.
+- Month: Points are assigned based on the month.
+  - Months 11, 12, 1-5 add points to ski-touring.
+  - Months 6-10 add points to hiking and cycling.
+
+Additionally, we have defined 3 checks to invalidate movement types if the the threshold were not realistic. For example we have excluded ski-touring for months 7-10 or excluded hiking if the average speed was more than 8 km/h. Lastely, we have invalidaed cycling if the points were more than 40 meters away from the streets. 
+
+In a last step, the ration od points to maximum possible points for each activity has been calculated, and the activity type with the highest ration has been assigned as the class type for the track. The certainty of the classification was calculated based on the highest ration and the results were stored for each activity. the results were added as "classified_tracks" in the list. 
+
+### Evaluation
+The evaluation process involves combining classified track data, calculating a confusion matrix, and deriving key performance metrics for each class. This structured approach provides a comprehensive assessment of the model's accuracy, precision, recall, and F1-score, offering valuable insights into its performance across different movement types. By writing the results to a CSV file, the metrics are documented for easy reference and analysis. The following values were used as performance metrics (@openai2023): 
+
+- Accuracy: The proportion of correctly classified instances.
+- Precision: The proportion of true positive classifications among all positive classifications.
+- Recall: The proportion of true positive classifications among all actual positives.
+- F1-Score: The harmonic mean of precision and recall.
 
 
 ## Results
 
+
+
+![Figure 2: A visualization of the arranged plots of each attribute]("GEO880-Project/grid_plot.png")
+
+
 ## Discussion
+
+More feature criteria could have been involved. FOr example the combination of average speed and elevation, speed variance and elevation, average speed and stop frequency, as well as speed variance and stop frequency might have.
 
 ## Appendix
 
