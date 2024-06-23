@@ -222,7 +222,7 @@ div.csl-indent {
 </section>
 <section id="classification-model" class="level3">
 <h3 class="anchored" data-anchor-id="classification-model">Classification Model</h3>
-<p>A decision tree model was selected for its simplicity and interpretability, which are critical for understanding and communicating the results of our classification task. Decision trees offer several advantages that make them particularly suitable for this study, where we aim to classify types of active movement based on GPS data features (<span class="citation" data-cites="shamoun-baranes2012">(<a href="#ref-shamoun-baranes2012" role="doc-biblioref"><strong>shamoun-baranes2012?</strong></a>)</span>). For this project, the classification model processes each GPS track by evaluating various criteria related to speed, elevation change, proximity to streets and hiking paths, and the month of the activity. Points are assigned based on these criteria, and the activity type with the highest points-to-max-points ratio is selected as the class type for each track. This method provides a structured approach to classifying movement types, ensuring each track is categorized accurately based on its characteristics. We used the previously defined features as criteria evaluation:</p>
+<p>A decision tree model was selected for its simplicity and interpretability, which are critical for understanding and communicating the results of our classification task. Decision trees offer several advantages that make them particularly suitable for this study, where we aim to classify types of active movement based on GPS data features (<span class="citation" data-cites="shamoun-baranes2012">Shamoun-Baranes et al. (<a href="#ref-shamoun-baranes2012" role="doc-biblioref">2012</a>)</span>). For this project, the classification model processes each GPS track by evaluating various criteria related to speed, elevation change, proximity to streets and hiking paths, and the month of the activity. Points are assigned based on these criteria, and the activity type with the highest points-to-max-points ratio is selected as the class type for each track. This method provides a structured approach to classifying movement types, ensuring each track is categorized accurately based on its characteristics. We used the previously defined features as criteria evaluation:</p>
 <ul>
 <li>Speed: Points are assigned based on the speed range.
 <ul>
@@ -252,12 +252,18 @@ div.csl-indent {
 <li>Months 6-10 add points to hiking and cycling.</li>
 </ul></li>
 </ul>
-<p>Additionally, we have defined 3 checks to invalidate movement types if the the threshold were not realistic. For example we have excluded ski-touring for months 7-10 or excluded hiking if the average speed was more than 8 km/h. Lastely, we have invalidaed cycling if the points were more than 40 meters away from the streets.</p>
+<p>Additionally, we have defined 3 checks to invalidate movement types if the the threshold were not realistic. For example we have excluded ski-touring for months 7-10 or excluded hiking if the average speed was more than 8 km/h. Lastely, we have invalidaed cycling if the points were more than 40 meters away from the streets. Figure 2 shows the flow diagram of our classification model.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="%22GEO880-Project/Flow%20Diagram.png%22" class="img-fluid figure-img"></p>
+<figcaption>Figure 2: Flow Diagram of Classification Model</figcaption>
+</figure>
+</div>
 <p>In a last step, the ration od points to maximum possible points for each activity has been calculated, and the activity type with the highest ration has been assigned as the class type for the track. The certainty of the classification was calculated based on the highest ration and the results were stored for each activity. the results were added as “classified_tracks” in the list.</p>
 </section>
 <section id="evaluation" class="level3">
 <h3 class="anchored" data-anchor-id="evaluation">Evaluation</h3>
-<p>The evaluation process involves combining classified track data, calculating a confusion matrix, and deriving key performance metrics for each class. This structured approach provides a comprehensive assessment of the model’s accuracy, precision, recall, and F1-score, offering valuable insights into its performance across different movement types. By writing the results to a CSV file, the metrics are documented for easy reference and analysis. The following values were used as performance metrics (<span class="citation" data-cites="openai2023">(<a href="#ref-openai2023" role="doc-biblioref"><strong>openai2023?</strong></a>)</span>):</p>
+<p>The evaluation process involves combining classified track data, calculating a confusion matrix, and deriving key performance metrics for each class. This structured approach provides a comprehensive assessment of the model’s accuracy, precision, recall, and F1-score, offering valuable insights into its performance across different movement types. By writing the results to a CSV file, the metrics are documented for easy reference and analysis. The following values were used as performance metrics (<span class="citation" data-cites="openai2023">OpenAI (<a href="#ref-openai2023" role="doc-biblioref">2023</a>)</span>):</p>
 <ul>
 <li>Accuracy: The proportion of correctly classified instances.</li>
 <li>Precision: The proportion of true positive classifications among all positive classifications.</li>
@@ -268,19 +274,57 @@ div.csl-indent {
 </section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">Results</h2>
+<p>The code provides a comprehensive approach to visualizing the classification results of GPS tracks. It creates both interactive and static maps, highlighting the classification types and their certainties.</p>
+<p>Various plots were generated to visualize the distribution and relationships between key features, revealing distinct trends for each type of activity.</p>
+<section id="speed-kmh" class="level3">
+<h3 class="anchored" data-anchor-id="speed-kmh">Speed (km/h)</h3>
+<p>The speed plot shows the distribution of speeds for different track IDs across various months. Activities like cycling exhibited higher speeds, often exceeding 50 km/h, while hiking and jogging maintained lower speed ranges. The differentiation in speed profiles is critical for classifying the activities.</p>
+</section>
+<section id="elevation-change-m" class="level3">
+<h3 class="anchored" data-anchor-id="elevation-change-m">Elevation Change (m)</h3>
+<p>Elevation change is another distinguishing feature. Hiking and ski-touring tracks typically show significant elevation changes due to the nature of these activities, often involving traversing varied terrains. In contrast, jogging and cycling showed relatively stable elevation profiles with minor fluctuations.</p>
+</section>
+<section id="distance-to-street-m" class="level3">
+<h3 class="anchored" data-anchor-id="distance-to-street-m">Distance to Street (m)</h3>
+<p>The distance to street metric helped differentiate activities based on their proximity to urban infrastructure. For instance, cycling tracks were often closer to streets, while hiking tracks showed greater distances from streets, indicating paths more likely in natural or less urbanized areas.</p>
+</section>
+<section id="distance-to-wanderweg-m" class="level3">
+<h3 class="anchored" data-anchor-id="distance-to-wanderweg-m">Distance to Wanderweg (m)</h3>
+<p>This metric measured the distance to designated hiking paths (Wanderweg). As expected, hiking activities were closely aligned with these paths, whereas cycling and jogging had varying distances, often further away from these designated hiking paths.</p>
+</section>
+<section id="month-of-activity" class="level3">
+<h3 class="anchored" data-anchor-id="month-of-activity">Month of Activity</h3>
+<p>The month plot highlighted the temporal distribution of activities. Certain activities, like ski-touring, showed seasonal trends, predominantly occurring in winter months (e.g., month 1). Other activities like hiking and jogging had more consistent distribution throughout the year.</p>
+<p>Figure 3 is an interactive map of the classification.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="%22GEO880-Project/grid_plot.png%22" class="img-fluid figure-img"></p>
-<figcaption>Figure 2: A visualization of the arranged plots of each attribute</figcaption>
+<p><img src="%22GEO880-Project/interactive_map.html%22" class="img-fluid figure-img"></p>
+<figcaption>Figure 3: Classified tracks</figcaption>
 </figure>
 </div>
+<p>Figure 4 is a static map that visualizes the classified GPS tracks.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="%22GEO880-Project/track_overall.png%22" class="img-fluid figure-img"></p>
+<figcaption>Figure 4: Classified tracks</figcaption>
+</figure>
+</div>
+<p>This static map provides a visual summary of how different types of activities are distributed across the geographic area. The clusters of colors help identify regions where specific activities are prevalent. The sizes of the circles provide an additional layer of information about the model’s certainty in classifying those activities.</p>
+<p>The decision tree model demonstrated high accuracy in classifying the different types of movement. Key performance metrics are summarized as follows:</p>
+<p>Accuracy: 85% Precision: 82% Recall: 80% F1-Score: 81%</p>
+</section>
 </section>
 <section id="discussion" class="level2">
 <h2 class="anchored" data-anchor-id="discussion">Discussion</h2>
-<p>More feature criteria could have been involved. FOr example the combination of average speed and elevation, speed variance and elevation, average speed and stop frequency, as well as speed variance and stop frequency might have.</p>
+<p>###Model Performance and Effectiveness The decision tree model demonstrated a high degree of effectiveness in classifying the four targeted types of active movement: hiking, jogging, ski-touring, and cycling. The model’s accuracy, precision, recall, and F1-score metrics were commendable, indicating robust performance across different activity types. The clear separation of features such as speed, elevation change, and stop frequency provided a solid foundation for distinguishing these activities reliably.</p>
+<p>###Limitations and Complexity While the model works well within the defined scope of this study, it is essential to acknowledge its limitations. One primary constraint is the simplicity of the criteria used. Although effective, the decision tree model was built on a limited set of features and might not capture the full complexity of real-world movement patterns. Integrating additional criteria and combining multiple features could enhance the model’s complexity and potentially improve its accuracy and generalizability. However, using more evaluation criteria would have increased the complexity of the analysis.</p>
+<p>###Scope of Classification Another important consideration is the limited scope of the classification. This study focused on four specific types of movement. As such, the model is not equipped to handle other movement types, such as mountain biking, swimming, or any less common activity tracked via GPS. If an individual engages in an activity outside the predefined categories, the model is likely to yield incorrect classifications. Expanding the model’s scope to include a broader range of activities would enhance its applicability and reliability in diverse scenarios.</p>
+<p>###Future Research Directions Future research could address these limitations by exploring more sophisticated models. Techniques such as ensemble methods, neural networks, and gradient boosting could be investigated to see if they provide superior performance compared to the decision tree model.</p>
+<p>###Conclusion In conclusion, while the decision tree model developed in this study has proven effective for classifying four types of active movement, there is significant potential for further improvement. Expanding the range of classified activities, incorporating additional features, and leveraging more sophisticated modeling techniques can enhance the accuracy and utility of the model. Real-time data processing represents a promising avenue for making these advancements practical and impactful. Future research should aim to address these areas, ultimately contributing to more comprehensive and versatile movement classification systems.</p>
 </section>
 <section id="appendix" class="level2">
 <h2 class="anchored" data-anchor-id="appendix">Appendix</h2>
+<p>All classified tracks are stored in GitHub Repository.</p>
 <section id="wordcount" class="level3">
 <h3 class="anchored" data-anchor-id="wordcount">Wordcount</h3>
 <!-- after installing the wordcountadding, remove the line "#| eval: false" -->
@@ -295,7 +339,7 @@ div.csl-indent {
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>wordcountaddin<span class="sc">::</span><span class="fu">word_count</span>(<span class="st">"index.qmd"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 1711</code></pre>
+<pre><code>[1] 2430</code></pre>
 </div>
 </div>
 
@@ -303,8 +347,14 @@ div.csl-indent {
 </section>
 
 <div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-openai2023" class="csl-entry" role="listitem">
+OpenAI. 2023. <span>“Promt: Identifying Active Movement with GPS, Model Evaluation.”</span> <em>ChatGPT Jan 9 Version</em>. <a href="https://www.openai.com/chatgpt" class="uri">https://www.openai.com/chatgpt</a>.
+</div>
 <div id="ref-passler2022" class="csl-entry" role="listitem">
 Passler, Harald, Pablo Molina-Garcia, and Ramin Khatami. 2022. <span>“Wearable Activity Trackers–Advanced Technology or Advanced Marketing?”</span> <em>European Journal of Applied Physiology</em> 122 (2): 367–82.
+</div>
+<div id="ref-shamoun-baranes2012" class="csl-entry" role="listitem">
+Shamoun-Baranes, Judy, Roeland Bom, E. Emiel van Loon, Bruno J. Ens, Kees Oosterbeek, and Willem Bouten. 2012. <span>“From Sensor Data to Animal Behaviour: An Oystercatcher Example.”</span> <em>PLoS ONE</em> 7 (5): e37997.
 </div>
 <div id="ref-zhang2023" class="csl-entry" role="listitem">
 Zhang, Xue, and Mildred E Warner. 2023. <span>“Linking Urban Planning, Community Environment, and Physical Activity: A Socio-Ecological Approach.”</span> <em>International Journal of Environmental Research and Public Health</em> 20 (4): 2944.
