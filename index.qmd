@@ -95,7 +95,7 @@ Initial data exploration includes generating plots and visualizations to underst
 
 
 
-![Figure 1: A visualization of the arranged plots of each attribute](grid_plot.png)
+![Figure 1: A visualization of the arranged plots of each attribute](Exports/grid_plot.png)
 
 
 
@@ -123,7 +123,7 @@ For this project, the classification model processes each GPS track by evaluatin
 
 Additionally, we have defined 3 checks to invalidate movement types if the the threshold were not realistic. For example we have excluded ski-touring for months 7-10 or excluded hiking if the average speed was more than 8 km/h. Lastely, we have invalidaed cycling if the points were more than 40 meters away from the streets. Figure 2 shows the flow diagram of our classification model.
 
-![Figure 2: Flow Diagram of Classification Model](Flow Diagram.png)
+![Figure 2: Flow Diagram of Classification Model](Flow Diagram/Flow Diagram.png)
 
 In a last step, the ration od points to maximum possible points for each activity has been calculated, and the activity type with the highest ration has been assigned as the class type for the track. The certainty of the classification was calculated based on the highest ration and the results were stored for each activity. the results were added as "classified_tracks" in the list. 
 
@@ -157,14 +157,14 @@ This metric measured the distance to designated hiking paths (Wanderweg). As exp
 ### Month of Activity
 The month plot highlighted the temporal distribution of activities. Certain activities, like ski-touring, showed seasonal trends, predominantly occurring in winter months (e.g., month 1). Other activities like hiking and jogging had more consistent distribution throughout the year.
 
-Figure 3 is an interactive map of the classification. 
+Figure 3 is an interactive map of the classification for a selected track (First Track in the Dataset). 
 
-![Figure 3: Classified tracks](interactive_map.html)
+![Figure 3: Classified tracks](Exports/interactive_map.html)
 
 
 Figure 4 is a static map that visualizes the classified GPS tracks.
 
-![Figure 4: Classified tracks](track_overall.png)
+![Figure 4: Classified tracks](Exports/track_overall.png)
 
 This static map provides a visual summary of how different types of activities are distributed across the geographic area. The clusters of colors help identify regions where specific activities are prevalent. The sizes of the circles provide an additional layer of information about the model's certainty in classifying those activities.
 
