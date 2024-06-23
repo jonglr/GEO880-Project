@@ -180,19 +180,19 @@ F1-Score: 81%
 
 ## Discussion
 
-###Model Performance and Effectiveness
+### Model Performance and Effectiveness
 The decision tree model demonstrated a high degree of effectiveness in classifying the four targeted types of active movement: hiking, jogging, ski-touring, and cycling. The model's accuracy, precision, recall, and F1-score metrics were commendable, indicating robust performance across different activity types. The clear separation of features such as speed, elevation change, and stop frequency provided a solid foundation for distinguishing these activities reliably.
 
-###Limitations and Complexity
+### Limitations and Complexity
 While the model works well within the defined scope of this study, it is essential to acknowledge its limitations. One primary constraint is the simplicity of the criteria used. Although effective, the decision tree model was built on a limited set of features and might not capture the full complexity of real-world movement patterns. Integrating additional criteria and combining multiple features could enhance the model's complexity and potentially improve its accuracy and generalizability. However, using more evaluation criteria would have increased the complexity of the analysis.
 
-###Scope of Classification
+### Scope of Classification
 Another important consideration is the limited scope of the classification. This study focused on four specific types of movement. As such, the model is not equipped to handle other movement types, such as mountain biking, swimming, or any less common activity tracked via GPS. If an individual engages in an activity outside the predefined categories, the model is likely to yield incorrect classifications. Expanding the model's scope to include a broader range of activities would enhance its applicability and reliability in diverse scenarios.
 
-###Future Research Directions
+### Future Research Directions
 Future research could address these limitations by exploring more sophisticated models. Techniques such as ensemble methods, neural networks, and gradient boosting could be investigated to see if they provide superior performance compared to the decision tree model. 
 
-###Conclusion
+### Conclusion
 In conclusion, while the decision tree model developed in this study has proven effective for classifying four types of active movement, there is significant potential for further improvement. Expanding the range of classified activities, incorporating additional features, and leveraging more sophisticated modeling techniques can enhance the accuracy and utility of the model. Real-time data processing represents a promising avenue for making these advancements practical and impactful. Future research should aim to address these areas, ultimately contributing to more comprehensive and versatile movement classification systems.
 
 ## Appendix
