@@ -1,6 +1,6 @@
 ---
 title: Automated classification of movement types based on GPS-dervived features
-subtitle: leveraging GPS data to classify different types of active movements hiking, jogging, ski touring and cycling.
+subtitle: leveraging GPS data to classify different types of active movements with focus on hiking, jogging, ski touring and cycling.
 author: Johannes Guler and Michael Fehr
 format:
   html:
@@ -16,7 +16,6 @@ bibliography: bibliography.bib
 #| code-summary: preprocessing
 
 ``` 
-#test rendering MF
 
 ## Abstract
 
@@ -24,11 +23,76 @@ This project aims to identify different types of active movement based on person
 
 ## Introduction
 
+This report is part of the semster project of the course "Patterns and trends in environmental data" offered by ZHAW. Goal of the project was to develop exploratory data science skills and be able to work with your own data in the software environment R. As part of this project, we have designed and implemented basic data science procedures and critically evaluated the data. 
+
 ### Background
 
+The increasing availability of personal GPS devices and fitness tracking applications has opened new avenues for analyzing movement patterns (@passler2022). Understanding the types of physical activities performed by individuals can provide valuable insights into fitness behavior, urban mobility, and environmental interactions (@zhang2023). This study focuses on leveraging GPS data to classify different types of active movements: hiking, jogging, ski-touring, and cycling.
+
+### Objectives
+
+The primary objective of this project is to develop a robust model that can classify different types of active movement using GPS data. We aim to:
+
+
+- Integrate GPS data with additional geographic information from Swiss TLM3D.
+- Extract and process relevant features from the GPS data.
+- Build and evaluate a decision tree model for movement classification.
+
+### Research Question
+
+In this context we are aiming to answer the following research questions: 
+
+- How accurately can we identify movement types/modes based on GPS data features such as speed, elevation change, distance measures or month of activity?
+- What are the challenges in distinguishing between similar modes (e.g. jogging & biking)?
 
 
 ## Material and Methods
+
+This chapter outlines the data collection, processing techniques, and the classification model used in this study.
+
+### Data Collection
+
+#### GPS Data
+The GPS data for this study were collected using the Strava app, a popular platform for tracking various physical activities. The data includes timestamps, latitude, longitude, and elevation points for activities categorized as hiking, jogging, ski-touring, and cycling.
+
+#### Swiss TLM3D Data
+Swiss TLM3D provides comprehensive geographic data, including detailed information on street networks and hiking paths. This data is crucial for contextualizing the GPS tracks and enhancing feature extraction.
+
+### Data Processing
+
+#### Data Loading
+The first step involves loading the GPX files from Strava and transforming them to a common coordinate system using Swiss TLM3D data. This ensures consistency in the spatial representation of the data. 
+
+#### Cleaning and Interpolation
+Data cleaning involves removing outliers that could skew the analysis. For instance, sudden jumps in GPS coordinates that are not physically plausible are filtered out. Additionally, the GPS tracks are interpolated to a consistent time interval, adjusting Strava tracks to 3-second intervals, to standardize the data points for analysis.
+Additionally, the street data has been reduced to avoid a huge data load. This involved the combination of all GPX tracks into a single sf object. After that, we have used a buffer of 1 km (1000 meters) around the combined tracks
+and later combined all buffers into a single geometry.After that the street network has been filtered to keep only the streets within the buffer.
+
+#### Data Exploration
+Initial data exploration includes generating plots and visualizations to understand the distribution and characteristics of the data. This step helps identify any anomalies and provides insights into the patterns associated with different activities. In a later stage this might help us identifying thresholds. 
+
+![Initial Plot after data cleaning and interpolation, data processing.rmd line 154 - 157]("GEO880-Project/plot.png")
+
+#### Feature Engineering
+In a next step, key features were defined to characterize the movement types. These include:
+
+- Speed (cross scale): Calculating speed over different scales:
+  - Average Speed: Mean speed over the duration of the activity for all segments.
+  - Maximum Speed: The highest speed that was reached during the activity for all segments.
+  - Speed Variance: the mean variance of speed during the activity for all segments. 
+- Elevation Change: Total elevation gain and loss.
+- Street & hiking path Distance: total distance to street and hiking path network.
+- Temporal Measures: Seasonality of the activity.
+
+Additionally, the combination of average speed and elevation, speed variance and elevation, average speed and stop frequency, as well as speed variance and stop frequency are analysed.
+
+Classification Model
+Model Selection
+A decision tree model is selected for its simplicity and interpretability. Decision trees can handle both numerical and categorical data, making them suitable for this classification task (Source from Patrick). 
+
+Training and Validation
+The decision tree model is trained using a subset of the data and validated using cross-validation techniques. This ensures that the model generalizes well to unseen data.
+
 
 ## Results
 

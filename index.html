@@ -55,7 +55,27 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="index_files/libs/clipboard/clipboard.min.js"></script>
@@ -81,7 +101,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Automated classification of movement types based on GPS-dervived features</h1>
-<p class="subtitle lead">leveraging GPS data to classify different types of active movements hiking, jogging, ski touring and cycling.</p>
+<p class="subtitle lead">leveraging GPS data to classify different types of active movements with focus on hiking, jogging, ski touring and cycling.</p>
 </div>
 
 
@@ -104,19 +124,88 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>#test rendering MF</p>
 <section id="abstract" class="level2">
 <h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
 <p>This project aims to identify different types of active movement based on personal GPS data. By integrating additional data from Swiss TLM3D, which includes detailed information on street networks and hiking paths, we aim to accurately classify movement types based on GPS-derived features such as speed, elevation change, distance measures, and month of activity. The classification is performed using a decision tree model in R Studio. The effectiveness of this approach is evaluated using predictive validation metrics including accuracy, precision, recall, and F1-score. The validation is performed using personal GPS data such as hiking, jogging, ski-touring, and cycling that were collected via the Strava app over a period of 3 months.</p>
 </section>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>This report is part of the semster project of the course “Patterns and trends in environmental data” offered by ZHAW. Goal of the project was to develop exploratory data science skills and be able to work with your own data in the software environment R. As part of this project, we have designed and implemented basic data science procedures and critically evaluated the data.</p>
 <section id="background" class="level3">
 <h3 class="anchored" data-anchor-id="background">Background</h3>
+<p>The increasing availability of personal GPS devices and fitness tracking applications has opened new avenues for analyzing movement patterns (<span class="citation" data-cites="passler2022">Passler, Molina-Garcia, and Khatami (<a href="#ref-passler2022" role="doc-biblioref">2022</a>)</span>). Understanding the types of physical activities performed by individuals can provide valuable insights into fitness behavior, urban mobility, and environmental interactions (<span class="citation" data-cites="zhang2023">Zhang and Warner (<a href="#ref-zhang2023" role="doc-biblioref">2023</a>)</span>). This study focuses on leveraging GPS data to classify different types of active movements: hiking, jogging, ski-touring, and cycling.</p>
+</section>
+<section id="objectives" class="level3">
+<h3 class="anchored" data-anchor-id="objectives">Objectives</h3>
+<p>The primary objective of this project is to develop a robust model that can classify different types of active movement using GPS data. We aim to:</p>
+<ul>
+<li>Integrate GPS data with additional geographic information from Swiss TLM3D.</li>
+<li>Extract and process relevant features from the GPS data.</li>
+<li>Build and evaluate a decision tree model for movement classification.</li>
+</ul>
+</section>
+<section id="research-question" class="level3">
+<h3 class="anchored" data-anchor-id="research-question">Research Question</h3>
+<p>In this context we are aiming to answer the following research questions:</p>
+<ul>
+<li>How accurately can we identify movement types/modes based on GPS data features such as speed, elevation change, distance measures or month of activity?</li>
+<li>What are the challenges in distinguishing between similar modes (e.g.&nbsp;jogging &amp; biking)?</li>
+</ul>
 </section>
 </section>
 <section id="material-and-methods" class="level2">
 <h2 class="anchored" data-anchor-id="material-and-methods">Material and Methods</h2>
+<p>This chapter outlines the data collection, processing techniques, and the classification model used in this study.</p>
+<section id="data-collection" class="level3">
+<h3 class="anchored" data-anchor-id="data-collection">Data Collection</h3>
+<section id="gps-data" class="level4">
+<h4 class="anchored" data-anchor-id="gps-data">GPS Data</h4>
+<p>The GPS data for this study were collected using the Strava app, a popular platform for tracking various physical activities. The data includes timestamps, latitude, longitude, and elevation points for activities categorized as hiking, jogging, ski-touring, and cycling.</p>
+</section>
+<section id="swiss-tlm3d-data" class="level4">
+<h4 class="anchored" data-anchor-id="swiss-tlm3d-data">Swiss TLM3D Data</h4>
+<p>Swiss TLM3D provides comprehensive geographic data, including detailed information on street networks and hiking paths. This data is crucial for contextualizing the GPS tracks and enhancing feature extraction.</p>
+</section>
+</section>
+<section id="data-processing" class="level3">
+<h3 class="anchored" data-anchor-id="data-processing">Data Processing</h3>
+<section id="data-loading" class="level4">
+<h4 class="anchored" data-anchor-id="data-loading">Data Loading</h4>
+<p>The first step involves loading the GPX files from Strava and transforming them to a common coordinate system using Swiss TLM3D data. This ensures consistency in the spatial representation of the data.</p>
+</section>
+<section id="cleaning-and-interpolation" class="level4">
+<h4 class="anchored" data-anchor-id="cleaning-and-interpolation">Cleaning and Interpolation</h4>
+<p>Data cleaning involves removing outliers that could skew the analysis. For instance, sudden jumps in GPS coordinates that are not physically plausible are filtered out. Additionally, the GPS tracks are interpolated to a consistent time interval, adjusting Strava tracks to 3-second intervals, to standardize the data points for analysis. Additionally, the street data has been reduced to avoid a huge data load. This involved the combination of all GPX tracks into a single sf object. After that, we have used a buffer of 1 km (1000 meters) around the combined tracks and later combined all buffers into a single geometry.After that the street network has been filtered to keep only the streets within the buffer.</p>
+</section>
+<section id="data-exploration" class="level4">
+<h4 class="anchored" data-anchor-id="data-exploration">Data Exploration</h4>
+<p>Initial data exploration includes generating plots and visualizations to understand the distribution and characteristics of the data. This step helps identify any anomalies and provides insights into the patterns associated with different activities. In a later stage this might help us identifying thresholds.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="%22GEO880-Project/plot.png%22" class="img-fluid figure-img"></p>
+<figcaption>Initial Plot after data cleaning and interpolation, data processing.rmd line 154 - 157</figcaption>
+</figure>
+</div>
+</section>
+<section id="feature-engineering" class="level4">
+<h4 class="anchored" data-anchor-id="feature-engineering">Feature Engineering</h4>
+<p>In a next step, key features were defined to characterize the movement types. These include:</p>
+<ul>
+<li>Speed (cross scale): Calculating speed over different scales:
+<ul>
+<li>Average Speed: Mean speed over the duration of the activity for all segments.</li>
+<li>Maximum Speed: The highest speed that was reached during the activity for all segments.</li>
+<li>Speed Variance: the mean variance of speed during the activity for all segments.</li>
+</ul></li>
+<li>Elevation Change: Total elevation gain and loss.</li>
+<li>Street &amp; hiking path Distance: total distance to street and hiking path network.</li>
+<li>Temporal Measures: Seasonality of the activity.</li>
+</ul>
+<p>Additionally, the combination of average speed and elevation, speed variance and elevation, average speed and stop frequency, as well as speed variance and stop frequency are analysed.</p>
+<p>Classification Model Model Selection A decision tree model is selected for its simplicity and interpretability. Decision trees can handle both numerical and categorical data, making them suitable for this classification task (Source from Patrick).</p>
+<p>Training and Validation The decision tree model is trained using a subset of the data and validated using cross-validation techniques. This ensures that the model generalizes well to unseen data.</p>
+</section>
+</section>
 </section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">Results</h2>
@@ -140,13 +229,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>wordcountaddin<span class="sc">::</span><span class="fu">word_count</span>(<span class="st">"index.qmd"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 124</code></pre>
+<pre><code>[1] 822</code></pre>
 </div>
 </div>
+
 </section>
 </section>
 
-</main>
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-passler2022" class="csl-entry" role="listitem">
+Passler, Harald, Pablo Molina-Garcia, and Ramin Khatami. 2022. <span>“Wearable Activity Trackers–Advanced Technology or Advanced Marketing?”</span> <em>European Journal of Applied Physiology</em> 122 (2): 367–82.
+</div>
+<div id="ref-zhang2023" class="csl-entry" role="listitem">
+Zhang, Xue, and Mildred E Warner. 2023. <span>“Linking Urban Planning, Community Environment, and Physical Activity: A Socio-Ecological Approach.”</span> <em>International Journal of Environmental Research and Public Health</em> 20 (4): 2944.
+</div>
+</div></section></div></main>
 <!-- /main column -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
