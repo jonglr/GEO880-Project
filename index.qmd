@@ -158,9 +158,9 @@ This metric measured the distance to designated hiking paths (Wanderweg). As exp
 The month plot highlighted the temporal distribution of activities. Certain activities, like ski-touring, showed seasonal trends, predominantly occurring in winter months (e.g., month 1). Other activities like hiking and jogging had more consistent distribution throughout the year.
 
 Figure 3 is an interactive map of the classification for a selected track (First Track in the Dataset). 
-
 ![Figure 3: Classified tracks](Exports/interactive_map.html)
 
+For a full page map, click [here](Exports/interactive_map.html) . 
 
 Figure 4 is a static map that visualizes the classified GPS tracks.
 
